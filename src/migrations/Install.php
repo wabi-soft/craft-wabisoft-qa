@@ -68,7 +68,7 @@ class Install extends Migration
     protected function addForeignKeys()
     {
         $this->addForeignKey(
-            $this->db->getForeignKeyName('{{%astuteo_qa_broken_links}}', 'runId'),
+            $this->db->getForeignKeyName('{{%wabisoft_qa_broken_links}}', 'runId'),
             '{{%wabisoft_qa_broken_links}}',
             'runId',
             '{{%wabisoft_qa_runs}}',

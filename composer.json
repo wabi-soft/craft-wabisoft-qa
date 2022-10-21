@@ -3,7 +3,7 @@
   "description": "WabiSoft helper for testing and monitoring projects.",
   "type": "craft-plugin",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "authors": [
     {
       "name": "WabiSoft",
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "astuteo\\qa\\": "src/"
+      "wabisoft\\qa\\": "src/"
     }
   },
   "extra": {
