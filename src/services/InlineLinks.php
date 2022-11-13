@@ -166,9 +166,20 @@ class InlineLinks
         return true;
     }
 
+    private static function getContents($url) {
+        if(@file_get_contents($url) === false)
+        {
+           return false;
+        }
+        return file_get_contents($url);
+    }
+
     private static function getElementInlineLinks($element, $runId) {
         $url = $element->url;
-        $html = file_get_contents($url);
+
+        $html = self::getContents($url);
+
+        if(!$html) return false;
 
         $dom = new DOMDocument();
         @$dom->loadHTML($html);
