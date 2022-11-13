@@ -22,7 +22,7 @@ class InternalLinks extends Component
         $thisRun->complete = false;
         $thisRun->save();
 
-        $urls = array_merge(self::getEntryUrls(), self::getCategoryUrls());
+        $urls = self::getAllUrls();
         $batches = array_chunk($urls, 5000);
         $totalBatches = count($batches);
 
@@ -37,7 +37,6 @@ class InternalLinks extends Component
 
         $thisRun->complete = true;
         $thisRun->save();
-
     }
 
     /*
@@ -59,8 +58,12 @@ class InternalLinks extends Component
         }
     }
 
+    public static function getAllUrls(): array
+    {
+        return array_merge(self::getEntryUrls(), self::getCategoryUrls());
+    }
 
-    private static function getEntryUrls() {
+    public static function getEntryUrls() {
         $urls = [];
         $entries = Entry::find()->all();
         foreach ($entries as $entry) {
@@ -70,7 +73,7 @@ class InternalLinks extends Component
         }
         return $urls;
     }
-    private static function getCategoryUrls() {
+    public static function getCategoryUrls() {
         $urls = [];
         $entries = Category::find()->all();
         foreach ($entries as $entry) {

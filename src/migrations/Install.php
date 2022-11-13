@@ -44,6 +44,24 @@ class Install extends Migration
                 ]
             );
         }
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%wabisoft_qa_element_urls}}');
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                '{{%wabisoft_qa_element_urls}}',
+                [
+                    'id' => $this->primaryKey(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                    'url' => $this->string(255),
+                    'class' => $this->string(255),
+                    'elementId' => $this->integer()->notNull(),
+                    'runId' =>  $this->integer(),
+                    'status' => $this->string(255),
+                ]
+            );
+        }
+
         $tableSchema = Craft::$app->db->schema->getTableSchema('{{%wabisoft_qa_broken_links}}');
         if ($tableSchema === null) {
             $tablesCreated = true;
@@ -60,6 +78,28 @@ class Install extends Migration
                 ]
             );
         }
+
+
+        $tableSchema = Craft::$app->db->schema->getTableSchema('{{%wabisoft_qa_inline_links}}');
+        if ($tableSchema === null) {
+            $tablesCreated = true;
+            $this->createTable(
+                '{{%wabisoft_qa_inline_links}}',
+                [
+                    'id' => $this->primaryKey(),
+                    'dateCreated' => $this->dateTime()->notNull(),
+                    'dateUpdated' => $this->dateTime()->notNull(),
+                    'url' => $this->string(255),
+                    'elementId' => $this->integer(),
+                    'foundOn' => $this->string(255),
+                    'runId' =>  $this->integer(),
+                    'rechecked' => $this->boolean(),
+                    'status' => $this->string(255),
+                    'broken' => $this->boolean(),
+                ]
+            );
+        }
+
         return $tablesCreated;
     }
     protected function createIndexes() {
@@ -76,10 +116,49 @@ class Install extends Migration
             'CASCADE',
             'CASCADE'
         );
+        $this->addForeignKey(
+            $this->db->getForeignKeyName('{{%wabisoft_qa_element_urls}}', 'runId'),
+            '{{%wabisoft_qa_element_urls}}',
+            'runId',
+            '{{%wabisoft_qa_runs}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+        $this->addForeignKey(
+            $this->db->getForeignKeyName('{{%wabisoft_qa_element_urls}}', 'elementId'),
+            '{{%wabisoft_qa_element_urls}}',
+            'elementId',
+            '{{%content}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+        $this->addForeignKey(
+            $this->db->getForeignKeyName('{{%wabisoft_qa_inline_links}}', 'runId'),
+            '{{%wabisoft_qa_inline_links}}',
+            'runId',
+            '{{%wabisoft_qa_runs}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+        $this->addForeignKey(
+            $this->db->getForeignKeyName('{{%wabisoft_qa_inline_links}}', 'elementId'),
+            '{{%wabisoft_qa_inline_links}}',
+            'elementId',
+            '{{%content}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
     }
     protected function removeTables()
     {
         $this->dropTableIfExists('{{%wabisoft_qa_broken_links}}');
+        $this->dropTableIfExists('{{%wabisoft_qa_inline_links}}');
+        $this->dropTableIfExists('{{%wabisoft_qa_element_urls}}');
         $this->dropTableIfExists('{{%wabisoft_qa_runs}}');
+
     }
 }

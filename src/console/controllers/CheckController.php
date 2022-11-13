@@ -1,12 +1,18 @@
 <?php
 namespace wabisoft\qa\console\controllers;
 
+use wabisoft\qa\services\InlineLinks;
 use wabisoft\qa\services\InternalLinks;
 use yii\console\Controller;
 class CheckController extends Controller
 {
     public function actionIndex() {
         InternalLinks::checkAll();
+        return 'complete';
+    }
+
+    public function actionInline() {
+        InlineLinks::checkAll();
         return 'complete';
     }
 
