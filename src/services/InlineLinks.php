@@ -127,17 +127,35 @@ class InlineLinks
     private static function checkInlineLinks($runId) {
         $records = InlineLinksRecord::find()->all();
         foreach ($records as $record) {
-            $status = self::checkLinkStatus($record->url);
+            // see if we already checked this URL during
+            // this run and avoid too many requests
 
-            //check to see if it's a relative URL
-            if($status != 200) {
-                $status = self::checkLinkStatus($record->foundOn . '/' . $record->url);
+            $checkedRecord = self::alreadyChecked($runId, $record);
+            if($checkedRecord) {
+                $record->broken = $checkedRecord->broken;
+                $record->status = $checkedRecord->status;
+                $record->runId = $checkedRecord->runId;
+            } else {
+                $status = self::checkLinkStatus($record->url);
+                //check to see if it's a relative URL
+                if($status != 200) {
+                    $status = self::checkLinkStatus($record->foundOn . '/' . $record->url);
+                }
+                $record->broken = self::isBroken($status);
+                $record->status = $status;
+                $record->runId = $runId;
             }
-            $record->broken = self::isBroken($status);
-            $record->status = $status;
-            $record->runId = $runId;
             $record->save();
         }
+    }
+
+    private static function alreadyChecked($runId, $thisRecord) {
+        $checkedRecord = InlineLinksRecord::find()->where(['url' => $thisRecord->url, 'runId' => $runId])->one();
+        if($checkedRecord) {
+            return false;
+        }
+        // if checked, let's match all of those
+        return $checkedRecord;
     }
 
     private static function isBroken($status) {
