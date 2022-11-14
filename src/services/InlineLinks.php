@@ -6,10 +6,9 @@ use Craft;
 use craft\elements\Category;
 use craft\elements\Entry;
 use craft\helpers\StringHelper;
-use DOMDocument;
-use DOMXpath;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use simplehtmldom\HtmlWeb;
 
 use wabisoft\qa\jobs\CheckInlineLinksJob;
 use wabisoft\qa\records\ElementUrlsRecord;
@@ -258,38 +257,31 @@ class InlineLinks
         return true;
     }
 
-    private static function getContents($url) {
-        $client = new Client();
-        try {
-            $response = $client->request('GET', $url);
-            return $response->getBody();
-        }
-        catch (GuzzleException $e) {
-            return false;
-        }
-    }
+//    private static function getContents($url) {
+//        $client = new Client();
+//        try {
+//            $response = $client->request('GET', $url);
+//            return $response->getBody();
+//        }
+//        catch (GuzzleException $e) {
+//            return false;
+//        }
+//    }
 
     private static function getElementInlineLinks($record, $runId, $prefix = null) {
-        $url = $record->url;
         $craftElement = self::getElement($record->elementId);
-        $html = self::getContents($url);
 
+        $client = new HtmlWeb();
+        $html = $client->load($record->url);
         if(!$html) return false;
 
-        $dom = new DOMDocument();
-        @$dom->loadHTML($html);
-
-        // grab all the on the page
-        $xpath = new DOMXPath($dom);
-        $hrefs = $xpath->evaluate("/html/body//a");
-
+        $hrefs = $html->find('a');
         $inlineLinks = [];
-        for ($i = 0; $i < $hrefs->length; $i++) {
-            $href = $hrefs->item($i);
-            $url = $href->getAttribute('href');
+
+        foreach ($hrefs as $href) {
             $inlineLinks[] = [
-                'element' => $href->ownerDocument->saveHTML($href),
-                'url' => $url
+                'element' => $href->outertext,
+                'url' => $href->href,
             ];
         }
 
