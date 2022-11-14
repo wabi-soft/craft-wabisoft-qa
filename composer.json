@@ -3,7 +3,7 @@
   "description": "WabiSoft helper for testing and monitoring projects.",
   "type": "craft-plugin",
   "license": "proprietary",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "authors": [
     {
       "name": "WabiSoft",
