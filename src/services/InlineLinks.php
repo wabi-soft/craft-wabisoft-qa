@@ -91,9 +91,9 @@ class InlineLinks
         Console::output('========================');
         Console::output('Checking Inline Links. This may take awhile');
         $end = microtime(true);
+        self::checkInlineLinks($thisRun->id);
         $checkInlineTime = ceil($end - $start);
         Console::output('Finished in checking inline links in ' . $checkInlineTime . ' seconds');
-        self::checkInlineLinks($thisRun->id);
 
         $totalTime = $findElementsTime + $findInlineTime + $checkInlineTime;
 
@@ -175,6 +175,9 @@ class InlineLinks
             return false;
         }
         if(str_starts_with($url, 'tel:')) {
+            return false;
+        }
+        if(str_starts_with($url, 'mailto:')) {
             return false;
         }
         if(str_starts_with($url, '#')) {

@@ -11,6 +11,74 @@
     <hr>
     {% set broken = craft.wabiAdminHelper.getBrokenInline %}
 
+    {% set groupedByLink = broken | group ( e => e.url ) %}
+
+    {% for group, linksInGroup in groupedByLink %}
+        <h2>
+            <a href="{{ linksInGroup[0].url ?? '' }}" target="_blank">
+            {{ group }}
+            </a>
+        </h2>
+        <p>
+            <strong>Found on:</strong>
+        </p>
+        <ul>
+        {% for link in linksInGroup[0:10] %}
+            {% set element = craft.wabiAdminHelper.getElement(link.elementId) %}
+            <li>
+                <a href="{{ element.cpEditUrl }}">
+                    <strong>
+                        {{ element.title }}
+                    </strong>
+                </a>
+                <span class="info">
+                        <code style="font-size: 10px !important;">
+                            {{ link.markup }}
+                        </code>
+                    </span>
+            </li>
+        {% endfor %}
+        </ul>
+
+        {% if linksInGroup|length > 10 %}
+            <p>
+                Plus {{ linksInGroup|length - 10 }} more entries.
+            </p>
+        {% endif %}
+    {# <table class="data fullwidth">
+        <thead>
+            <tr>
+                <th>Found on</th>
+                <td>Markup</td>
+                <th>Last Run Found</th>
+            </tr>
+        </thead>
+
+            {% for link in linksInGroup[0:10] %}
+            <tr>
+                {% set element = craft.wabiAdminHelper.getElement(link.elementId) %}
+                <td>
+                    <a href="{{ element.cpEditUrl }}" class="go">
+                        <strong>{{ element.title }}</strong>
+                    </a>
+                </td>
+                <td>
+                    <span class="info">
+                        <code style="font-size: 10px !important;">
+                            {{ link.markup }}
+                        </code>
+                    </span>
+                </td>
+                <td>{{ link.runId }}</td>
+            </tr>
+            {% endfor %}
+    </table>
+    #}
+        <hr>
+    {% endfor %}
+
+
+    {#
     <table class="data fullwidth">
         <thead>
         <tr>
@@ -41,4 +109,5 @@
             </tr>
         {% endfor %}
     </table>
+    #}
 {% endset %}
