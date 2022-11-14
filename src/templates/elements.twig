@@ -1,0 +1,41 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Elements' %}
+{% set selectedSubnavItem = 'elements' %}
+
+{% set content %}
+    <h1>
+        Broken Elements
+    </h1>
+    <hr>
+    {% set broken = craft.wabiAdminHelper.getBrokenElements %}
+
+    <table class="data fullwidth">
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>URL</th>
+            <th>Last Run Found</th>
+        </tr>
+        </thead>
+        {% for link in broken %}
+            {% set element = craft.wabiAdminHelper.getElement(link.elementId) %}
+            <tr>
+                <td>
+                    <a href="{{ element.cpEditUrl }}" class="go" target="_blank">
+                        <strong>
+                            {{ element.title }}
+                        </strong>
+                    </a>
+                </td>
+                <td>
+                    <a href="{{ link.url }}" target="_blank">
+                    {{ link.url }}
+                    </a>
+                </td>
+                <td>{{ link.runId }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endset %}

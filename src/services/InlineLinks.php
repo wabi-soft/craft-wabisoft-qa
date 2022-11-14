@@ -15,6 +15,9 @@ use wabisoft\qa\records\ElementUrlsRecord;
 use wabisoft\qa\records\InlineLinksRecord;
 use wabisoft\qa\records\RunsRecord;
 
+use wabisoft\framework\services\Logging;
+use yii\db\StaleObjectException;
+
 class InlineLinks
 {
 
@@ -42,6 +45,10 @@ class InlineLinks
 
     }
 
+    /**
+     * @throws \Throwable
+     * @throws StaleObjectException
+     */
     public static function checkElementById($elementId, $runId) {
         $element = self::getElement($elementId);
         if (!$element) return false;
@@ -191,7 +198,10 @@ class InlineLinks
         for ($i = 0; $i < $hrefs->length; $i++) {
             $href = $hrefs->item($i);
             $url = $href->getAttribute('href');
-            $inlineLinks[] = $url;
+            $inlineLinks[] = [
+                'element' => $href->ownerDocument->saveHTML($href),
+                'url' => $url
+            ];
         }
 
         if(count($inlineLinks) < 1) {
@@ -200,15 +210,16 @@ class InlineLinks
         $elementId = $element->id;
 
         foreach ($inlineLinks as $link) {
-            if(self::shouldCheckLink($link)) {
-                $record = InlineLinksRecord::find()->where(['elementId' => $elementId, 'url' => $link])->one();
+            if(self::shouldCheckLink($link['url'])) {
+                $record = InlineLinksRecord::find()->where(['elementId' => $elementId, 'url' => $link['url']])->one();
                 if(!$record) {
                     $record = new InlineLinksRecord();
                 }
                 $record->elementId = $elementId;
                 $record->runId = $runId;
                 $record->foundOn = $element->url;
-                $record->url = $link;
+                $record->url = $link['url'];
+                $record->element = $link['element'];
                 $record->save();
             }
         }

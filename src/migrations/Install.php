@@ -73,6 +73,7 @@ class Install extends Migration
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'url' => $this->string(255),
                     'runId' =>  $this->integer(),
+                    'elementId' =>  $this->integer(),
                     'rechecked' => $this->boolean(),
                     'errorCode' => $this->string(255)
                 ]
@@ -91,6 +92,7 @@ class Install extends Migration
                     'dateUpdated' => $this->dateTime()->notNull(),
                     'url' => $this->string(255),
                     'elementId' => $this->integer(),
+                    'element' => $this->string(255),
                     'foundOn' => $this->string(255),
                     'runId' =>  $this->integer(),
                     'rechecked' => $this->boolean(),
@@ -112,6 +114,15 @@ class Install extends Migration
             '{{%wabisoft_qa_broken_links}}',
             'runId',
             '{{%wabisoft_qa_runs}}',
+            'id',
+            'CASCADE',
+            'CASCADE'
+        );
+        $this->addForeignKey(
+            $this->db->getForeignKeyName('{{%wabisoft_qa_broken_links}}', 'runId'),
+            '{{%wabisoft_qa_broken_links}}',
+            'elementId',
+            '{{%content}}',
             'id',
             'CASCADE',
             'CASCADE'

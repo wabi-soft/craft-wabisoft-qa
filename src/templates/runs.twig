@@ -1,0 +1,32 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = 'Runs' %}
+{% set selectedSubnavItem = 'runs' %}
+
+{% set content %}
+    <h1>
+        Runs
+    </h1>
+    <hr>
+    {% set runs = craft.wabiAdminHelper.getRuns %}
+
+    <table class="data fullwidth">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Complete</th>
+        </tr>
+        </thead>
+        {% for run in runs %}
+            <tr>
+                <td>{{ run.id }}</td>
+                <td>{{ run.dateCreated|date('m/d/y') }}</td>
+                <td>{{ run.type }}</td>
+                <td>{{ run.complete }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+{% endset %}

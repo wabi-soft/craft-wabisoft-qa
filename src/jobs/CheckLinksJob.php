@@ -10,17 +10,17 @@ use wabisoft\qa\services\InternalLinks;
 class CheckLinksJob extends BaseJob
 {
     public string $name = 'Checking Links';
-    public array|null $urls;
+    public array|null $ids;
     public int $currentBatch;
     public int $runId;
     public int $totalBatches;
 
     public function execute($queue) : void {
         App::maxPowerCaptain();
-        $urls = $this->urls;
+        $ids = $this->ids;
         $runId = $this->runId;
-        $totalUrls = count($this->urls);
-        foreach ($urls as $i => $url) {
+        $totalUrls = count($this->ids);
+        foreach ($ids as $i => $id) {
             $this->setProgress(
                 $queue,
                 $i / $totalUrls,
@@ -29,7 +29,7 @@ class CheckLinksJob extends BaseJob
                     'total' => $totalUrls,
                 ])
             );
-            InternalLinks::checkLink($url, $runId);
+            InternalLinks::checkLink($id, $runId);
         }
     }
 

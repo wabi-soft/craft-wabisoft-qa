@@ -2,7 +2,7 @@
   "name": "wabisoft/wabisoft-qa",
   "description": "WabiSoft helper for testing and monitoring projects.",
   "type": "craft-plugin",
-  "license": "MIT",
+  "license": "proprietary",
   "version": "1.0.1",
   "authors": [
     {
@@ -15,6 +15,7 @@
   },
   "require": {
     "php": "^8.0.0",
+    "wabisoft/framework": "^1.1.0",
     "craftcms/cms": "^4.0.0",
     "ext-dom": "*"
   },

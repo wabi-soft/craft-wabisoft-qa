@@ -23,12 +23,14 @@ class InternalLinks extends Component
         $thisRun->save();
 
         $urls = self::getAllUrls();
-        $batches = array_chunk($urls, 5000);
+        $ids = InlineLinks::getAllIds();
+
+        $batches = array_chunk($ids, 5000);
         $totalBatches = count($batches);
 
         foreach ($batches as $i => $batch) {
           $result = Craft::$app->getQueue()->delay(0)->push( new CheckLinksJob([
-              'urls' => $batch,
+              'ids' => $batch,
               'runId' => $thisRun->id,
               'currentBatch' => $i + 1,
               'totalBatches' => $totalBatches
@@ -100,8 +102,13 @@ class InternalLinks extends Component
    }
 
 
-    public static function checkLink($url, $runId = null): bool
+    public static function checkLink($id, $runId = null): bool
     {
+
+        // get URL
+        $element = InlineLinks::getElement($id);
+        $url = $element->url;
+
         $client = new \GuzzleHttp\Client();
         try {
             $response = $client->request('GET', $url);
@@ -112,6 +119,7 @@ class InternalLinks extends Component
                 $record = new BrokenLinksRecord();
             }
             $record->url = $url;
+            $record->elementId = $element->id;
             $record->runId = $runId;
             $record->errorCode = '500';
             $record->save();
