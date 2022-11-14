@@ -13,7 +13,7 @@ class CheckController extends Controller
     }
 
     public function actionInline() {
-        InlineLinks::checkAll();
+        InlineLinks::checkConsole();
         return 'complete';
     }
 

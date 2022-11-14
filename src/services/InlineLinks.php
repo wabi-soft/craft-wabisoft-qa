@@ -5,6 +5,7 @@ namespace wabisoft\qa\services;
 use Craft;
 use craft\elements\Category;
 use craft\elements\Entry;
+use craft\helpers\StringHelper;
 use DOMDocument;
 use DOMXpath;
 use GuzzleHttp\Client;
@@ -17,6 +18,8 @@ use wabisoft\qa\records\RunsRecord;
 
 use wabisoft\framework\services\Logging;
 use yii\db\StaleObjectException;
+
+use craft\helpers\Console;
 
 class InlineLinks
 {
@@ -42,13 +45,66 @@ class InlineLinks
 
         $thisRun->complete = true;
         $thisRun->save();
-
     }
 
-    /**
-     * @throws \Throwable
-     * @throws StaleObjectException
-     */
+
+    public static function checkConsole() {
+        $thisRun = new RunsRecord();
+        $thisRun->type = 'inline';
+        $thisRun->complete = false;
+        $thisRun->save();
+        $ids = self::getAllIds();
+
+        /*
+         * Find all elements with URIs and record those
+         */
+        $start = microtime(true);
+        Console::output('========================');
+        Console::output('Generate Element URLs');
+        foreach ($ids as $id) {
+            self::checkElementById($id, $thisRun->id);
+        }
+        $end = microtime(true);
+        $findElementsTime = ceil($end - $start);
+        Console::output('Fetched Element URls in ' . $findElementsTime . ' seconds');
+
+        /*
+         * Loop through Elements and find all a tags
+         */
+        $elementRecords = ElementUrlsRecord::find()->all();
+        Console::output('========================');
+        Console::output('Find Inline URLs for ' . count($elementRecords) . ' elements.');
+        $start = microtime(true);
+        $count = 0;
+        foreach ($elementRecords as $record) {
+           $count++;
+            $prefix = $count . '/' . count($elementRecords);
+            self::getElementInlineLinks($record, $thisRun->id, $prefix);
+        }
+        $end = microtime(true);
+        $findInlineTime = ceil($end - $start);
+        Console::output('Finished in finding element links in ' . $findInlineTime . ' seconds');
+
+        /*
+         * Check those links
+         */
+        $start = microtime(true);
+        Console::output('========================');
+        Console::output('Checking Inline Links. This may take awhile');
+        $end = microtime(true);
+        $checkInlineTime = ceil($end - $start);
+        Console::output('Finished in checking inline links in ' . $checkInlineTime . ' seconds');
+        self::checkInlineLinks($thisRun->id);
+
+        $totalTime = $findElementsTime + $findInlineTime + $checkInlineTime;
+
+        $thisRun->timeToComplete = ceil($totalTime);
+        $thisRun->complete = true;
+        $thisRun->save();
+    }
+
+
+
     public static function checkElementById($elementId, $runId) {
         $element = self::getElement($elementId);
         if (!$element) return false;
@@ -63,9 +119,6 @@ class InlineLinks
         $record->class = get_class($element) ?? null;
         $record->url = $element->url;
         $record->save();
-
-        self::getElementInlineLinks($element, $runId);
-        self::checkInlineLinks($runId);
     }
 
     public static function getElement($id) {
@@ -109,7 +162,7 @@ class InlineLinks
     private static function checkLinkStatus($url) {
         $client = new Client();
         try {
-            $response = $client->request('GET', $url);
+            $response = $client->request('GET', $url, ['timeout' => 5]);
             return $response->getStatusCode();
         }
         catch (GuzzleException $e) {
@@ -122,33 +175,70 @@ class InlineLinks
         if(!$checkParams && str_starts_with($url, '?')) {
             return false;
         }
+        if(str_starts_with($url, 'tel:')) {
+            return false;
+        }
+        if(str_starts_with($url, '#')) {
+            return false;
+        }
+
         return true;
     }
 
 
     private static function checkInlineLinks($runId) {
-        $records = InlineLinksRecord::find()->all();
+        $records = InlineLinksRecord::find()->where(['runId' => $runId])->all();
+        $count = 0;
+        $totalLinks = count($records);
+        Console::output($totalLinks . ' Links');
+        Console::output('========================');
         foreach ($records as $record) {
             // see if we already checked this URL during
             // this run and avoid too many requests
-
+            $count++;
             $checkedRecord = self::alreadyChecked($runId, $record);
             if($checkedRecord) {
                 $record->broken = $checkedRecord->broken;
                 $record->status = $checkedRecord->status;
                 $record->runId = $checkedRecord->runId;
             } else {
-                $status = self::checkLinkStatus($record->url);
-                //check to see if it's a relative URL
-                if($status != 200) {
-                    $status = self::checkLinkStatus($record->foundOn . '/' . $record->url);
+                $status = self::checkPossibleLinks($record);
+                if(self::isBroken($status)) {
+                    Console::output('→ ' . $count . '/' . $totalLinks . ' ' . $record->url . ' | ' . $record->elementId . ': ERROR');
+                } else {
+                    Console::output('→ ' . $count . '/' . $totalLinks . ' ' . $record->url . ' | ' . $record->elementId . ': ' . $status);
                 }
+
                 $record->broken = self::isBroken($status);
                 $record->status = $status;
                 $record->runId = $runId;
             }
             $record->save();
         }
+    }
+
+
+    private static function checkPossibleLinks($record) {
+        $url = $record->url;
+        $found = $record->foundOn;
+        $status = self::checkLinkStatus($url);
+        // in case it's absolute link with TLD
+        if(self::isBroken($status)) {
+            $status = self::checkLinkStatus(self::getTLD($found) . $record->url);
+        }
+        // in case it's a relative link
+        if(self::isBroken($status)) {
+            $status = self::checkLinkStatus($found . '/' . $record->url);
+        }
+        return $status;
+    }
+
+    private static function getTLD($url) {
+        $url_info = parse_url($url);
+        $domain = $url_info['scheme'] . '://' . $url_info['host'];
+        $domain = trim($domain);
+        $domain = rtrim($domain);
+        return $domain . '/';
     }
 
     private static function alreadyChecked($runId, $thisRecord) {
@@ -179,9 +269,9 @@ class InlineLinks
         }
     }
 
-    private static function getElementInlineLinks($element, $runId) {
-        $url = $element->url;
-
+    private static function getElementInlineLinks($record, $runId, $prefix = null) {
+        $url = $record->url;
+        $craftElement = self::getElement($record->elementId);
         $html = self::getContents($url);
 
         if(!$html) return false;
@@ -194,7 +284,6 @@ class InlineLinks
         $hrefs = $xpath->evaluate("/html/body//a");
 
         $inlineLinks = [];
-
         for ($i = 0; $i < $hrefs->length; $i++) {
             $href = $hrefs->item($i);
             $url = $href->getAttribute('href');
@@ -207,18 +296,19 @@ class InlineLinks
         if(count($inlineLinks) < 1) {
             return false;
         }
-        $elementId = $element->id;
-
+        $elementId = $record->elementId;
+        Console::output('→ ' . $prefix . ' - ' . count($inlineLinks) . ' links found on ' . $craftElement->uri);
         foreach ($inlineLinks as $link) {
             if(self::shouldCheckLink($link['url'])) {
-                $markup = substr($link['element'],0,1000);
+                $markup = StringHelper::safeTruncate($link['element'], 1000);
+                $markup = StringHelper::encodeMb4($markup);
                 $record = InlineLinksRecord::find()->where(['elementId' => $elementId, 'url' => $link['url']])->one();
                 if(!$record) {
                     $record = new InlineLinksRecord();
                 }
                 $record->elementId = $elementId;
                 $record->runId = $runId;
-                $record->foundOn = $element->url;
+                $record->foundOn = $craftElement->url;
                 $record->url = $link['url'];
                 $record->markup = $markup;
                 $record->save();
