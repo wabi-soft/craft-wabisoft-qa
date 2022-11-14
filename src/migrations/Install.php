@@ -96,6 +96,7 @@ class Install extends Migration
                     'markup' => $this->mediumText(),
                     'foundOn' => $this->string(255),
                     'runId' =>  $this->integer(),
+                    'checked' => $this->boolean(),
                     'rechecked' => $this->boolean(),
                     'status' => $this->string(255),
                     'broken' => $this->boolean(),

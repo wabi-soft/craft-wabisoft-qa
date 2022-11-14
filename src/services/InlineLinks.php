@@ -197,6 +197,7 @@ class InlineLinks
             $count++;
             $checkedRecord = self::alreadyChecked($runId, $record);
             if($checkedRecord) {
+                Console::output('→ ' . $count . '/' . $totalLinks . 'Already checked ' . $record->url . ' in this run');
                 $record->broken = $checkedRecord->broken;
                 $record->status = $checkedRecord->status;
                 $record->runId = $checkedRecord->runId;
@@ -210,6 +211,7 @@ class InlineLinks
 
                 $record->broken = self::isBroken($status);
                 $record->status = $status;
+                $record->checked = true;
                 $record->runId = $runId;
             }
             $record->save();
@@ -240,9 +242,14 @@ class InlineLinks
         return $domain . '/';
     }
 
-    private static function alreadyChecked($runId, $thisRecord) {
-        $checkedRecord = InlineLinksRecord::find()->where(['url' => $thisRecord->url, 'runId' => $runId])->one();
-        if($checkedRecord) {
+    private static function alreadyChecked($runId, $thisRecord): bool|array|\yii\db\ActiveRecord
+    {
+        $checkedRecord = InlineLinksRecord::find()->where([
+            'url' => $thisRecord->url,
+            'runId' => $runId,
+            'checked' => true
+        ])->one();
+        if(!$checkedRecord) {
             return false;
         }
         // if checked, let's match all of those
@@ -300,6 +307,7 @@ class InlineLinks
                 }
                 $record->elementId = $elementId;
                 $record->runId = $runId;
+                $record->checked = false;
                 $record->foundOn = $craftElement->url;
                 $record->url = $link['url'];
                 $record->markup = $markup;
