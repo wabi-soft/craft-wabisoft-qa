@@ -12,62 +12,70 @@
     <div class="">
         {% set recentInternal = craft.wabiAdminHelper.getMostRecentInternalRun %}
         <div class="body">
-            <h2>{{ recentInternal.dateUpdated|date('m/d/y') }} Elements Run</h2>
+            {% if recentInternal|length  %}
+                <h2>{{ recentInternal.dateUpdated|date('m/d/y') }} Elements Run</h2>
 
-            {% set broken = craft.wabiAdminHelper.getBrokenElements(recentInternal.id) %}
-            <table class="data fullwidth collapsible">
-                <thead>
-                <tr>
-                    <th>Element</th>
-                    <th data-icon="world"></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in broken %}
-                    {% set element = craft.wabiAdminHelper.getElement(item.elementId) %}
+                {% set broken = craft.wabiAdminHelper.getBrokenElements(recentInternal.id) %}
+                <table class="data fullwidth collapsible">
+                    <thead>
                     <tr>
-                        <th>
-                            <a href="{{ element.cpEditUrl }}" class="go">{{ element.title }}</a>
-                        </th>
-                        <td>
-                            <a href="{{ item.url }}" data-icon="world"></a>
-                        </td>
+                        <th>Element</th>
+                        <th data-icon="world"></th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for item in broken %}
+                        {% set element = craft.wabiAdminHelper.getElement(item.elementId) %}
+                        <tr>
+                            <th>
+                                <a href="{{ element.cpEditUrl }}" class="go">{{ element.title }}</a>
+                            </th>
+                            <td>
+                                <a href="{{ item.url }}" data-icon="world"></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Has not been run yet</p>
+            {% endif %}
         </div>
         {% set recentInline = craft.wabiAdminHelper.getMostRecentInlineRun %}
         <hr>
         <div class="body">
-            <h2>{{ recentInline.dateUpdated|date('m/d/y') }} Inline Run</h2>
-            {% set broken = craft.wabiAdminHelper.getBrokenInline(recentInline.id) %}
+            {% if recentInline|length %}
+                <h2>{{ recentInline.dateUpdated|date('m/d/y') }} Inline Run</h2>
+                {% set broken = craft.wabiAdminHelper.getBrokenInline(recentInline.id) %}
 
-            <table class="data fullwidth collapsible">
-                <thead>
-                <tr>
-                    <th>URL</th>
-                    <th>Found on</th>
-                    <th data-icon="world"></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for item in broken %}
-                    {% set element = craft.wabiAdminHelper.getElement(item.elementId) %}
+                <table class="data fullwidth collapsible">
+                    <thead>
                     <tr>
-                        <th>
-                            {{ item.url }}
-                        </th>
-                        <th>
-                            <a href="{{ element.cpEditUrl }}" class="go">{{ element.title }}</a>
-                        </th>
-                        <td>
-                            <a href="{{ item.url }}" data-icon="world"></a>
-                        </td>
+                        <th>URL</th>
+                        <th>Found on</th>
+                        <th data-icon="world"></th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for item in broken %}
+                        {% set element = craft.wabiAdminHelper.getElement(item.elementId) %}
+                        <tr>
+                            <th>
+                                {{ item.url }}
+                            </th>
+                            <th>
+                                <a href="{{ element.cpEditUrl }}" class="go">{{ element.title }}</a>
+                            </th>
+                            <td>
+                                <a href="{{ item.url }}" data-icon="world"></a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Has not been run yet</p>
+            {% endif %}
         </div>
     </div>
 {% endset %}

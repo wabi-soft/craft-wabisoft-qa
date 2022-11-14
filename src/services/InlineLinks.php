@@ -219,7 +219,7 @@ class InlineLinks
                 $record->runId = $runId;
                 $record->foundOn = $element->url;
                 $record->url = $link['url'];
-                $record->element = $link['element'];
+                $record->markup = $link['element'];
                 $record->save();
             }
         }
