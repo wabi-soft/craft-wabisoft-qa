@@ -5,19 +5,15 @@ namespace wabisoft\qa\services;
 use Craft;
 use craft\elements\Category;
 use craft\elements\Entry;
-use craft\records\Element;
 use DOMDocument;
 use DOMXpath;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 
 use wabisoft\qa\jobs\CheckInlineLinksJob;
 use wabisoft\qa\records\ElementUrlsRecord;
 use wabisoft\qa\records\InlineLinksRecord;
 use wabisoft\qa\records\RunsRecord;
-use wabisoft\qa\services\InternalLinks;
-use yii\console\Exception;
 
 class InlineLinks
 {
@@ -104,8 +100,7 @@ class InlineLinks
 
 
     private static function checkLinkStatus($url) {
-
-        $client = new \GuzzleHttp\Client();
+        $client = new Client();
         try {
             $response = $client->request('GET', $url);
             return $response->getStatusCode();
@@ -167,11 +162,14 @@ class InlineLinks
     }
 
     private static function getContents($url) {
-        if(@file_get_contents($url) === false)
-        {
-           return false;
+        $client = new Client();
+        try {
+            $response = $client->request('GET', $url);
+            return $response->getBody();
         }
-        return file_get_contents($url);
+        catch (GuzzleException $e) {
+            return false;
+        }
     }
 
     private static function getElementInlineLinks($element, $runId) {
