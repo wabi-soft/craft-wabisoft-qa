@@ -211,6 +211,7 @@ class InlineLinks
 
         foreach ($inlineLinks as $link) {
             if(self::shouldCheckLink($link['url'])) {
+                $markup = substr($link['element'],0,1000);
                 $record = InlineLinksRecord::find()->where(['elementId' => $elementId, 'url' => $link['url']])->one();
                 if(!$record) {
                     $record = new InlineLinksRecord();
@@ -219,7 +220,7 @@ class InlineLinks
                 $record->runId = $runId;
                 $record->foundOn = $element->url;
                 $record->url = $link['url'];
-                $record->markup = $link['element'];
+                $record->markup = $markup;
                 $record->save();
             }
         }
