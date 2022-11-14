@@ -3,7 +3,7 @@
   "description": "WabiSoft helper for testing and monitoring projects.",
   "type": "craft-plugin",
   "license": "proprietary",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "authors": [
     {
       "name": "WabiSoft",
@@ -17,6 +17,7 @@
     "php": "^8.0.0",
     "wabisoft/framework": "^1.1.0",
     "craftcms/cms": "^4.0.0",
+    "simplehtmldom/simplehtmldom": "*",
     "ext-dom": "*"
   },
   "autoload": {
