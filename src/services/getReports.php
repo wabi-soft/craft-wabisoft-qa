@@ -15,7 +15,11 @@ class getReports
     }
 
     public static function getBrokenElementsCount($runId = null) {
-        return count(self::getBrokenElements($runId));
+        $count = count(self::getBrokenElements($runId));
+        if($count < 1) {
+            return null;
+        }
+        return $count;
     }
 
     public static function getBrokenInline($runId = null) {
@@ -25,7 +29,11 @@ class getReports
         return InlineLinksRecord::find()->where(['broken' => true, 'runId' => $runId])->all();
     }
     public static function getBrokenInlineCount($runId = null) {
-        return count(self::getBrokenInline($runId));
+        $count = count(self::getBrokenInline($runId));
+        if($count < 1) {
+            return null;
+        }
+        return $count;
     }
 
     public static function getRuns() {
